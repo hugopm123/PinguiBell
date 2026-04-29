@@ -1,6 +1,6 @@
 # PinguiBell 🐧
 
-**PinguiBell** es una encantadora aplicación nativa para macOS que trae una pequeña mascota animada a tu escritorio para acompañarte mientras trabajas. Puedes programar su aparición para que te recuerde tomar descansos o simplemente para alegrar tu día.
+**PinguiBell** es una aplicación nativa para macOS que trae una pequeña mascota animada a tu escritorio para acompañarte mientras trabajas. Puedes programar su aparición para que te recuerde tomar descansos o simplemente para alegrar tu día.
 
 ## ✨ Características
 
