@@ -7,7 +7,7 @@ CONTENTS_DIR="$BUILD_DIR/$APP_NAME.app/Contents"
 MACOS_DIR="$CONTENTS_DIR/MacOS"
 RESOURCES_DIR="$CONTENTS_DIR/Resources"
 
-echo "🚀 Iniciando compilación de $APP_NAME Nativo..."
+echo "🚀 Iniciando compilación de $APP_NAME"
 
 # Limpiar build anterior
 rm -rf "$BUILD_DIR"
