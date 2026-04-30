@@ -4,16 +4,22 @@ struct PenguinView: View {
     @State private var isVisible = false
     @State private var currentFrame = 0
     
-    // Configuración del sprite (4x4)
+    // MARK: - Constants
     private let columns = 4
     private let rows = 4
     private let totalFrames = 16
     
+    // MARK: - Config
+    private var frameRate: Double {
+        UserDefaults.standard.double(forKey: "AnimationFrameRate").zeroIs(0.1)
+    }
+    
+    private var duration: Double {
+        UserDefaults.standard.double(forKey: "AppearanceDuration").zeroIs(5.0)
+    }
+    
     var body: some View {
-        let frameRate = UserDefaults.standard.double(forKey: "AnimationFrameRate") == 0 ? 0.1 : UserDefaults.standard.double(forKey: "AnimationFrameRate")
-        let duration = UserDefaults.standard.double(forKey: "AppearanceDuration") == 0 ? 5.0 : UserDefaults.standard.double(forKey: "AppearanceDuration")
-        
-        VStack {
+        ZStack {
             if isVisible, let image = currentSpriteFrame() {
                 Image(nsImage: image)
                     .interpolation(.none)
@@ -37,18 +43,17 @@ struct PenguinView: View {
             }
             
             DispatchQueue.main.asyncAfter(deadline: .now() + duration) {
-                withAnimation {
-                    isVisible = false
-                }
+                withAnimation { isVisible = false }
             }
         }
     }
     
-    // Función para recortar el frame actual de la imagen original
-    func currentSpriteFrame() -> NSImage? {
-        let currentAnimal = UserDefaults.standard.string(forKey: "SelectedAnimal") ?? "penguin"
+    // MARK: - Sprite Logic
+    
+    private func currentSpriteFrame() -> NSImage? {
+        let animal = UserDefaults.standard.string(forKey: "SelectedAnimal") ?? "penguin"
         
-        guard let path = Bundle.main.path(forResource: currentAnimal, ofType: "png"),
+        guard let path = Bundle.main.path(forResource: animal, ofType: "png"),
               let originalImage = NSImage(contentsOfFile: path) else {
             return nil
         }
@@ -56,8 +61,10 @@ struct PenguinView: View {
         let frameWidth = originalImage.size.width / CGFloat(columns)
         let frameHeight = originalImage.size.height / CGFloat(rows)
         
+        // El sprite se recorre de izquierda a derecha, de arriba a abajo.
+        // En macOS/AppKit, (0,0) es la esquina inferior izquierda.
         let col = currentFrame % columns
-        let row = (totalFrames - 1 - currentFrame) / columns
+        let row = (rows - 1) - (currentFrame / columns)
         
         let rect = NSRect(
             x: CGFloat(col) * frameWidth,
@@ -73,9 +80,4 @@ struct PenguinView: View {
         
         return croppedImage
     }
-}
-
-#Preview {
-    PenguinView()
-        .background(Color.black.opacity(0.1))
 }

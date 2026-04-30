@@ -4,9 +4,9 @@ class TimeManager: ObservableObject {
     static let shared = TimeManager()
     
     private var timer: Timer?
-    var onHourPassed: (() -> Void)?
+    var onTick: (() -> Void)?
     
-    init() {
+    private init() {
         scheduleNextEvent()
     }
     
@@ -19,37 +19,36 @@ class TimeManager: ObservableObject {
         
         var nextDate: Date?
         
-        if frequency == 2 {
+        switch frequency {
+        case 2: // Cada 15 minutos
             let intervals = [0, 15, 30, 45]
-            var possibleDates: [Date] = []
-            for m in intervals {
-                if let d = calendar.nextDate(after: now, matching: DateComponents(minute: m, second: 0), matchingPolicy: .nextTime) {
-                    possibleDates.append(d)
-                }
+            let possibleDates = intervals.compactMap { 
+                calendar.nextDate(after: now, matching: DateComponents(minute: $0, second: 0), matchingPolicy: .nextTime) 
             }
             nextDate = possibleDates.min()
-        } else if frequency == 1 {
+            
+        case 1: // Cada 30 minutos
             let next00 = calendar.nextDate(after: now, matching: DateComponents(minute: 0, second: 0), matchingPolicy: .nextTime)
             let next30 = calendar.nextDate(after: now, matching: DateComponents(minute: 30, second: 0), matchingPolicy: .nextTime)
-            
             if let d00 = next00, let d30 = next30 {
                 nextDate = min(d00, d30)
             } else {
                 nextDate = next00 ?? next30
             }
-        } else {
+            
+        default: // Cada hora
             nextDate = calendar.nextDate(after: now, matching: DateComponents(minute: 0, second: 0), matchingPolicy: .nextTime)
         }
         
         guard let targetDate = nextDate else {
+            // Reintentar en 1 minuto si falla el cálculo
             DispatchQueue.main.asyncAfter(deadline: .now() + 60) { self.scheduleNextEvent() }
             return
         }
         
         let interval = targetDate.timeIntervalSince(now)
-        
         timer = Timer.scheduledTimer(withTimeInterval: interval, repeats: false) { [weak self] _ in
-            self?.onHourPassed?()
+            self?.onTick?()
             self?.scheduleNextEvent()
         }
     }
