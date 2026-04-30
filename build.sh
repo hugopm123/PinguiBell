@@ -21,6 +21,7 @@ swiftc -o "$MACOS_DIR/$APP_NAME" \
     PinguiBellApp.swift \
     OverlayWindow.swift \
     PenguinView.swift \
+    SettingsView.swift \
     TimeManager.swift \
     -framework SwiftUI \
     -framework AppKit \

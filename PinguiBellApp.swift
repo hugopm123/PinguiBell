@@ -6,9 +6,19 @@ struct PinguiBellApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
 
     var body: some Scene {
-        Settings {
-            EmptyView()
+        WindowGroup {
+            SettingsView()
+                .onAppear {
+                    if let window = NSApplication.shared.windows.first {
+                        window.title = "Configuración PinguiBell"
+                        window.styleMask.insert(.resizable)
+                        // Asegurar que la ventana sea sólida
+                        window.isOpaque = true
+                        window.hasShadow = true
+                    }
+                }
         }
+        .windowStyle(.hiddenTitleBar)
     }
 }
 
@@ -21,7 +31,25 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     func applicationDidFinishLaunching(_ notification: Notification) {
         setupStatusItem()
         setupTimeManager()
+        
+        // Asegurar que la ventana sea visible al inicio (importante cuando LSUIElement es true)
+        NSApp.activate(ignoringOtherApps: true)
+        
+        // Observadores para sincronizar con la ventana de configuración
+        NotificationCenter.default.addObserver(self, selector: #selector(handleUpdateMenu), name: Notification.Name("UpdateMenu"), object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(showPenguinManual), name: Notification.Name("ShowPenguinManual"), object: nil)
+        
+        // Mostrar el pingüino al inicio
         showPenguin()
+    }
+    
+    func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool {
+        return false
+    }
+    
+    @objc func handleUpdateMenu() {
+        updateMenu()
+        updateStatusItemIcon()
     }
     
     func setupStatusItem() {
@@ -59,6 +87,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         let currentDuration = UserDefaults.standard.double(forKey: "AppearanceDuration") == 0 ? 5.0 : UserDefaults.standard.double(forKey: "AppearanceDuration")
         let currentSpeed = UserDefaults.standard.double(forKey: "AnimationFrameRate") == 0 ? 0.1 : UserDefaults.standard.double(forKey: "AnimationFrameRate")
         
+        menu.addItem(NSMenuItem(title: "Abrir Configuración ⚙️", action: #selector(openMainWindow), keyEquivalent: "s"))
         menu.addItem(NSMenuItem(title: "Probar Mascota 🐧", action: #selector(showPenguinManual), keyEquivalent: "p"))
         menu.addItem(NSMenuItem.separator())
         
@@ -128,6 +157,20 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         menu.addItem(NSMenuItem(title: "Salir", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q"))
         
         statusItem?.menu = menu
+    }
+    
+    @objc func openMainWindow() {
+        NSApp.activate(ignoringOtherApps: true)
+        if let window = NSApp.windows.first(where: { $0.title == "Configuración PinguiBell" }) {
+            window.makeKeyAndOrderFront(nil)
+        } else {
+            // Si por alguna razón no existe, intentamos buscar cualquier ventana que no sea la del penguin
+            NSApp.windows.forEach { window in
+                if !(window is OverlayWindow) {
+                    window.makeKeyAndOrderFront(nil)
+                }
+            }
+        }
     }
     
     @objc func setFrequency(_ sender: NSMenuItem) {
